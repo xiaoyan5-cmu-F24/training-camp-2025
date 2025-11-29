@@ -25,7 +25,7 @@ const App: React.FC = () => {
           style={{ flex: 1, minWidth: 0 }}
         />
       </Header>
-      <Content style={{ padding: '0 48px', marginTop: '24px' }}>
+      <Content className="responsive-content">
         <div
           style={{
             background: colorBgContainer,

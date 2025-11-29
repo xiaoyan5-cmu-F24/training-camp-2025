@@ -39,9 +39,9 @@ const ProductList: React.FC = () => {
       <Title level={2} style={{ textAlign: 'center', marginBottom: '32px' }}>
         Featured Products
       </Title>
-      <Row gutter={[16, 16]} justify="center">
+      <Row gutter={[24, 24]} justify="center">
         {items.map((product) => (
-          <Col key={product.id} xs={24} sm={12} md={8} lg={6}>
+          <Col key={product.id} xs={24} sm={12} md={12} lg={8} xl={6} xxl={4}>
              <Card
                 hoverable
                 cover={<img alt={product.name} src={product.image} style={{ height: 200, objectFit: 'cover' }} />}
