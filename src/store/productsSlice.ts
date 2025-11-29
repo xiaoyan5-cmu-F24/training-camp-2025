@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export interface Product {
   id: number;
@@ -8,16 +9,26 @@ export interface Product {
   image: string;
 }
 
+export type SortOption = 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | null;
+
 interface ProductsState {
   items: Product[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
+  searchTerm: string;
+  sortOption: SortOption;
+  currentPage: number;
+  pageSize: number;
 }
 
 const initialState: ProductsState = {
   items: [],
   status: 'idle',
   error: null,
+  searchTerm: '',
+  sortOption: null,
+  currentPage: 1,
+  pageSize: 6, // Show 6 items per page initially
 };
 
 export const fetchProducts = createAsyncThunk('products/fetchProducts', async () => {
@@ -32,7 +43,23 @@ export const fetchProducts = createAsyncThunk('products/fetchProducts', async ()
 const productsSlice = createSlice({
   name: 'products',
   initialState,
-  reducers: {},
+  reducers: {
+    setSearchTerm: (state, action: PayloadAction<string>) => {
+      state.searchTerm = action.payload;
+      state.currentPage = 1; // Reset to first page on search
+    },
+    setSortOption: (state, action: PayloadAction<SortOption>) => {
+      state.sortOption = action.payload;
+      state.currentPage = 1; // Reset to first page on sort change
+    },
+    setCurrentPage: (state, action: PayloadAction<number>) => {
+      state.currentPage = action.payload;
+    },
+    setPageSize: (state, action: PayloadAction<number>) => {
+      state.pageSize = action.payload;
+      state.currentPage = 1;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchProducts.pending, (state) => {
@@ -48,5 +75,7 @@ const productsSlice = createSlice({
       });
   },
 });
+
+export const { setSearchTerm, setSortOption, setCurrentPage, setPageSize } = productsSlice.actions;
 
 export default productsSlice.reducer;
