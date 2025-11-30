@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { List, Card, Typography, Spin, Alert, Row, Col, Input, Select, Pagination, Space } from 'antd';
 import { ShoppingCartOutlined, SearchOutlined } from '@ant-design/icons';
+import { debounce } from 'lodash';
 import type { AppDispatch, RootState } from '../store/store';
 import { fetchProducts, setSearchTerm, setSortOption, setCurrentPage, setPageSize } from '../store/productsSlice';
 import type { SortOption } from '../store/productsSlice';
@@ -15,11 +16,35 @@ const ProductList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { items, status, error, searchTerm, sortOption, currentPage, pageSize } = useSelector((state: RootState) => state.products);
 
+  // Local state for immediate UI update
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchProducts());
     }
   }, [status, dispatch]);
+
+  // Sync local state if Redux state changes externally (optional but good practice)
+  useEffect(() => {
+    setLocalSearchTerm(searchTerm);
+  }, [searchTerm]);
+
+  // Debounced search action
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        dispatch(setSearchTerm(value));
+      }, 500), // 500ms delay
+    [dispatch]
+  );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   // Client-side Filtering, Sorting, and Pagination Logic
   const processedProducts = useMemo(() => {
@@ -58,8 +83,15 @@ const ProductList: React.FC = () => {
     return processedProducts.slice(startIndex, startIndex + pageSize);
   }, [processedProducts, currentPage, pageSize]);
 
-  const handleSearch = (value: string) => {
-    dispatch(setSearchTerm(value));
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalSearchTerm(value); // Update input immediately
+    debouncedSearch(value);    // Update Redux state after delay
+  };
+
+  const handleManualSearch = (value: string) => {
+    debouncedSearch.cancel(); // Cancel pending debounce
+    dispatch(setSearchTerm(value)); // Update immediately
   };
 
   const handleSortChange = (value: SortOption) => {
@@ -101,8 +133,9 @@ const ProductList: React.FC = () => {
         <Search
           placeholder="Search products..."
           allowClear
-          onSearch={handleSearch}
-          onChange={(e) => handleSearch(e.target.value)} // Live search
+          value={localSearchTerm}
+          onSearch={handleManualSearch}
+          onChange={handleSearchChange} // Live search with debounce
           style={{ width: 300 }}
         />
         <Select
