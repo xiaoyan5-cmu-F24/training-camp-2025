@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { List, Card, Typography, Spin, Alert, Row, Col, Input, Select, Pagination, Space } from 'antd';
+import { List, Card, Typography, Spin, Alert, Row, Col, Input, Select, Pagination, Space, Skeleton } from 'antd';
 import { ShoppingCartOutlined, SearchOutlined } from '@ant-design/icons';
 import { debounce } from 'lodash';
 import type { AppDispatch, RootState } from '../store/store';
@@ -105,14 +105,26 @@ const ProductList: React.FC = () => {
     }
   };
 
-  if (status === 'loading') {
+  // Render Skeletons for Loading State
+  const renderSkeletons = () => {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '50px', flexDirection: 'column', alignItems: 'center' }}>
-        <Spin size="large" />
-        <div style={{ marginTop: 16 }}>Loading products...</div>
-      </div>
+      <Row gutter={[24, 24]} justify="center">
+        {Array.from({ length: pageSize }).map((_, index) => (
+          <Col key={index} xs={24} sm={12} md={12} lg={8} xl={6} xxl={4}>
+            <Card
+              hoverable
+              cover={<Skeleton.Image active style={{ width: '100%', height: 200 }} />}
+              actions={[
+                <Skeleton.Button active size="small" shape="circle" key="cart" />,
+              ]}
+            >
+              <Skeleton active paragraph={{ rows: 2 }} title={{ width: '70%' }} />
+            </Card>
+          </Col>
+        ))}
+      </Row>
     );
-  }
+  };
 
   if (status === 'failed') {
     return (
@@ -137,6 +149,7 @@ const ProductList: React.FC = () => {
           onSearch={handleManualSearch}
           onChange={handleSearchChange} // Live search with debounce
           style={{ width: 300 }}
+          disabled={status === 'loading'}
         />
         <Select
           defaultValue={null}
@@ -144,6 +157,7 @@ const ProductList: React.FC = () => {
           onChange={handleSortChange}
           placeholder="Sort by"
           allowClear
+          disabled={status === 'loading'}
         >
           <Option value="price_asc">Price: Low to High</Option>
           <Option value="price_desc">Price: High to Low</Option>
@@ -152,8 +166,10 @@ const ProductList: React.FC = () => {
         </Select>
       </div>
 
-      {/* Product Grid */}
-      {paginatedProducts.length > 0 ? (
+      {/* Product Grid or Skeletons */}
+      {status === 'loading' ? (
+        renderSkeletons()
+      ) : paginatedProducts.length > 0 ? (
         <Row gutter={[24, 24]} justify="center">
           {paginatedProducts.map((product) => (
             <Col key={product.id} xs={24} sm={12} md={12} lg={8} xl={6} xxl={4}>
@@ -187,7 +203,7 @@ const ProductList: React.FC = () => {
         </div>
       )}
 
-      {/* Pagination */}
+      {/* Pagination - Disable or hide when loading */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
         <Pagination
           current={currentPage}
@@ -196,6 +212,7 @@ const ProductList: React.FC = () => {
           onChange={handlePageChange}
           showSizeChanger
           pageSizeOptions={['6', '12', '24']}
+          disabled={status === 'loading'}
         />
       </div>
     </div>
