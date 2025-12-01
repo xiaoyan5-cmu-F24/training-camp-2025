@@ -7,12 +7,13 @@ const { Option } = Select;
 
 interface ProductFilterProps {
   searchTerm: string;
+  sortOption: SortOption;
   onSearch: (value: string) => void;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSortChange: (value: SortOption) => void;
 }
 
-const ProductFilter: React.FC<ProductFilterProps> = ({ searchTerm, onSearch, onSearchChange, onSortChange }) => {
+const ProductFilter: React.FC<ProductFilterProps> = ({ searchTerm, sortOption, onSearch, onSearchChange, onSortChange }) => {
   return (
     <Row gutter={[24, 24]} style={{ margin: '0 0 24px 0' }}>
       <Col span={24}>
@@ -26,7 +27,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ searchTerm, onSearch, onS
             style={{ width: 300 }}
           />
           <Select
-            defaultValue={null}
+            value={sortOption}
             style={{ width: 200 }}
             onChange={onSortChange}
             placeholder="Sort by"

@@ -23,6 +23,7 @@ const RowRenderer = ({ index, style, data }: any) => {
     handleRefreshRecs,
     handleAddToCart,
     localSearchTerm,
+    sortOption,
     handleManualSearch,
     handleSearchChange,
     handleSortChange
@@ -51,6 +52,7 @@ const RowRenderer = ({ index, style, data }: any) => {
 
           <ProductFilter
             searchTerm={localSearchTerm}
+            sortOption={sortOption}
             onSearch={handleManualSearch}
             onSearchChange={handleSearchChange}
             onSortChange={handleSortChange}
@@ -246,6 +248,7 @@ const ProductList: React.FC = () => {
                 handleRefreshRecs,
                 handleAddToCart,
                 localSearchTerm,
+                sortOption,
                 handleManualSearch,
                 handleSearchChange,
                 handleSortChange
