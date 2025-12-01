@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, Typography, Alert, Input, Select, Skeleton, message, Grid, Pagination } from 'antd';
-import { ShoppingCartOutlined } from '@ant-design/icons';
+import { Card, Typography, Alert, Input, Select, Skeleton, message, Grid, Pagination, Row, Col, Button, Tooltip } from 'antd';
+import { ShoppingCartOutlined, ReloadOutlined } from '@ant-design/icons';
 import { debounce } from 'lodash';
 import { FixedSizeGrid } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -24,6 +24,8 @@ const ProductList: React.FC = () => {
 
   // Local state for immediate UI update
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+  // State to trigger recommendation refresh
+  const [recTrigger, setRecTrigger] = useState(0);
 
   const handleAddToCart = (product: any) => {
     dispatch(addToCart(product));
@@ -123,6 +125,10 @@ const ProductList: React.FC = () => {
     }
   };
 
+  const handleRefreshRecs = () => {
+    setRecTrigger(prev => prev + 1);
+  };
+
   // Determine column count based on breakpoint (similar to Ant Design responsive grid)
   const getColumnCount = () => {
     if (screens.xxl) return 6;
@@ -137,6 +143,14 @@ const ProductList: React.FC = () => {
   
   // Calculate row count
   const rowCount = Math.ceil(paginatedProducts.length / columnCount);
+
+  // Random Recommendations (Simulate AI)
+  const randomRecommendations = useMemo(() => {
+    if (items.length === 0) return [];
+    // Shuffle array and pick first 4. Depend on recTrigger to refresh.
+    const shuffled = [...items].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 4);
+  }, [items, recTrigger]);
 
   // Render cell for react-window
   const Cell = ({ columnIndex, rowIndex, style }: any) => {
@@ -203,6 +217,42 @@ const ProductList: React.FC = () => {
       <Title level={2} style={{ textAlign: 'center', marginBottom: '32px' }}>
         Featured Products
       </Title>
+
+      {/* Recommendations Section */}
+      {randomRecommendations.length > 0 && (
+        <div style={{ marginBottom: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', gap: '8px' }}>
+             <Title level={4} style={{ margin: 0 }}>You May Also Like</Title>
+             <Tooltip title="Refresh Recommendations">
+                <Button type="text" icon={<ReloadOutlined />} onClick={handleRefreshRecs} />
+             </Tooltip>
+          </div>
+          <Row gutter={[16, 16]} justify="center">
+            {randomRecommendations.map(product => (
+              <Col key={`rec-${product.id}`} xs={24} sm={12} md={6} lg={6} xl={6}>
+                <Card
+                  hoverable
+                  style={{ width: '100%', display: 'flex', flexDirection: 'column' }}
+                  cover={<img alt={product.name} src={product.image} style={{ height: 160, objectFit: 'cover' }} />}
+                  bodyStyle={{ padding: '12px', flex: 1 }}
+                  actions={[
+                    <ShoppingCartOutlined key="cart" onClick={() => handleAddToCart(product)} />,
+                  ]}
+                >
+                  <Meta
+                    title={<Text strong style={{ fontSize: '14px' }} ellipsis>{product.name}</Text>}
+                    description={
+                      <Text strong style={{ fontSize: '14px', color: '#1890ff' }}>
+                         ${product.price.toFixed(2)}
+                      </Text>
+                    }
+                  />
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      )}
 
       {/* Controls: Search and Sort */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px', flexShrink: 0 }}>
