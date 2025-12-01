@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { List, Card, Typography, Spin, Alert, Row, Col, Input, Select, Pagination, Space, Skeleton } from 'antd';
-import { ShoppingCartOutlined, SearchOutlined } from '@ant-design/icons';
+import { Card, Typography, Alert, Row, Col, Input, Select, Pagination, Skeleton, message } from 'antd';
+import { ShoppingCartOutlined } from '@ant-design/icons';
 import { debounce } from 'lodash';
 import type { AppDispatch, RootState } from '../store/store';
 import { fetchProducts, setSearchTerm, setSortOption, setCurrentPage, setPageSize } from '../store/productsSlice';
 import type { SortOption } from '../store/productsSlice';
+import { addToCart, setCartOpen } from '../store/cartSlice';
 
 const { Meta } = Card;
 const { Title, Text } = Typography;
@@ -18,6 +19,12 @@ const ProductList: React.FC = () => {
 
   // Local state for immediate UI update
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+
+  const handleAddToCart = (product: any) => {
+    dispatch(addToCart(product));
+    dispatch(setCartOpen(true));
+    message.success(`${product.name} added to cart`);
+  };
 
   useEffect(() => {
     if (status === 'idle') {
@@ -177,7 +184,7 @@ const ProductList: React.FC = () => {
                 hoverable
                 cover={<img alt={product.name} src={product.image} style={{ height: 200, objectFit: 'cover' }} />}
                 actions={[
-                  <ShoppingCartOutlined key="cart" style={{ fontSize: '20px' }} />,
+                  <ShoppingCartOutlined key="cart" style={{ fontSize: '20px' }} onClick={() => handleAddToCart(product)} />,
                 ]}
               >
                 <Meta
