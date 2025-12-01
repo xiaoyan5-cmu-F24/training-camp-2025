@@ -27,7 +27,7 @@ const CartDrawer: React.FC = () => {
       placement="right"
       onClose={handleClose}
       open={isOpen}
-      width={drawerWidth}
+      styles={{ wrapper: { width: drawerWidth } }}
       extra={
         <Button type="primary" onClick={handleClose}>
           Close

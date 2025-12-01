@@ -41,9 +41,9 @@ const App: React.FC = () => {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <CartDrawer />
-      <Header style={{ display: 'flex', alignItems: 'center' }}>
+      <Header style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
         <div className="demo-logo" style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', marginRight: '20px' }}>
           E-Shop
         </div>
@@ -56,19 +56,22 @@ const App: React.FC = () => {
           style={{ flex: 1, minWidth: 0 }}
         />
       </Header>
-      <Content className="responsive-content">
+      <Content className="responsive-content" style={{ overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div
           style={{
             background: colorBgContainer,
-            minHeight: 280,
+            flex: 1,
             padding: 24,
             borderRadius: borderRadiusLG,
+            overflow: 'hidden', // Ensure inner overflow doesn't trigger scroll here
+            display: 'flex',
+            flexDirection: 'column'
           }}
         >
           <ProductList />
         </div>
       </Content>
-      <Footer style={{ textAlign: 'center' }}>
+      <Footer style={{ textAlign: 'center', flexShrink: 0 }}>
         E-Shop ©{new Date().getFullYear()} Created with Ant Design
       </Footer>
     </Layout>

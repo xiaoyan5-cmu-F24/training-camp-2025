@@ -28,7 +28,7 @@ const initialState: ProductsState = {
   searchTerm: '',
   sortOption: null,
   currentPage: 1,
-  pageSize: 50, // Show 50 items per page initially
+  pageSize: 50,
 };
 
 export const fetchProducts = createAsyncThunk('products/fetchProducts', async () => {
@@ -46,11 +46,11 @@ const productsSlice = createSlice({
   reducers: {
     setSearchTerm: (state, action: PayloadAction<string>) => {
       state.searchTerm = action.payload;
-      state.currentPage = 1; // Reset to first page on search
+      state.currentPage = 1;
     },
     setSortOption: (state, action: PayloadAction<SortOption>) => {
       state.sortOption = action.payload;
-      state.currentPage = 1; // Reset to first page on sort change
+      state.currentPage = 1;
     },
     setCurrentPage: (state, action: PayloadAction<number>) => {
       state.currentPage = action.payload;
