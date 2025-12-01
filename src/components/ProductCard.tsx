@@ -1,13 +1,14 @@
 import React from 'react';
 import { Card, Typography } from 'antd';
 import { ShoppingCartOutlined } from '@ant-design/icons';
+import type { Product } from '../store/productsSlice';
 
 const { Meta } = Card;
 const { Text } = Typography;
 
 interface ProductCardProps {
-  product: any;
-  handleAddToCart: (product: any) => void;
+  product: Product;
+  handleAddToCart: (product: Product) => void;
   imageHeight?: number;
 }
 

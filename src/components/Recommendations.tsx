@@ -1,14 +1,15 @@
 import React from 'react';
 import { Row, Col, Typography, Button, Tooltip, Card } from 'antd';
 import { ReloadOutlined, ShoppingCartOutlined } from '@ant-design/icons';
+import type { Product } from '../store/productsSlice';
 
 const { Title, Text } = Typography;
 const { Meta } = Card;
 
 interface RecommendationsProps {
-  products: any[];
+  products: Product[];
   onRefresh: () => void;
-  onAddToCart: (product: any) => void;
+  onAddToCart: (product: Product) => void;
 }
 
 const Recommendations: React.FC<RecommendationsProps> = ({ products, onRefresh, onAddToCart }) => {

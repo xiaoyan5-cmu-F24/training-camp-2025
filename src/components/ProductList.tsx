@@ -6,7 +6,7 @@ import { VariableSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import type { AppDispatch, RootState } from '../store/store';
 import { fetchProducts, setSearchTerm, setSortOption, setCurrentPage, setPageSize } from '../store/productsSlice';
-import type { SortOption } from '../store/productsSlice';
+import type { SortOption, Product } from '../store/productsSlice';
 import { addToCart, setCartOpen } from '../store/cartSlice';
 import ProductCard from './ProductCard';
 import ProductFilter from './ProductFilter';
@@ -14,8 +14,27 @@ import Recommendations from './Recommendations';
 
 const { Title } = Typography;
 
+interface ItemData {
+  paginatedProducts: Product[];
+  columnCount: number;
+  randomRecommendations: Product[];
+  handleRefreshRecs: () => void;
+  handleAddToCart: (product: Product) => void;
+  localSearchTerm: string;
+  sortOption: SortOption;
+  handleManualSearch: (value: string) => void;
+  handleSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSortChange: (value: SortOption) => void;
+}
+
+interface RowRendererProps {
+  index: number;
+  style: React.CSSProperties;
+  data: ItemData;
+}
+
 // Define RowRenderer outside to ensure stability and prevent focus loss
-const RowRenderer = ({ index, style, data }: any) => {
+const RowRenderer: React.FC<RowRendererProps> = ({ index, style, data }) => {
   const {
     paginatedProducts,
     columnCount,
@@ -32,7 +51,7 @@ const RowRenderer = ({ index, style, data }: any) => {
   // Adjust style for scrollbar
   const rowStyle = {
     ...style,
-    width: typeof style.width === 'number' ? style.width - 20 : 'calc(100% - 20px)',
+    width: typeof style.width === 'number' ? (style.width as number) - 20 : 'calc(100% - 20px)',
   };
 
   // Header Row
@@ -70,7 +89,7 @@ const RowRenderer = ({ index, style, data }: any) => {
   return (
     <div style={rowStyle}>
       <Row gutter={[24, 24]} style={{ margin: 0, height: 'calc(100% - 30px)' }}>
-        {rowItems.map((product: any) => (
+        {rowItems.map((product: Product) => (
           <Col key={product.id} span={24 / columnCount} style={{ height: '100%' }}>
             <ProductCard
               product={product}
@@ -93,7 +112,7 @@ const ProductList: React.FC = () => {
   // State to trigger recommendation refresh
   const [recTrigger, setRecTrigger] = useState(0);
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = (product: Product) => {
     dispatch(addToCart(product));
     dispatch(setCartOpen(true));
     message.success(`${product.name} added to cart`);
