@@ -56,16 +56,16 @@ const App: React.FC = () => {
           style={{ flex: 1, minWidth: 0 }}
         />
       </Header>
-      <Content className="responsive-content" style={{ overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <Content className="responsive-content" style={{ padding: '24px', flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div
           style={{
             background: colorBgContainer,
-            flex: 1,
-            padding: 24,
             borderRadius: borderRadiusLG,
-            overflow: 'hidden', // Ensure inner overflow doesn't trigger scroll here
+            flex: 1,
+            overflow: 'hidden',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            padding: '24px'
           }}
         >
           <ProductList />

@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, Typography, Alert, Input, Select, Skeleton, message, Grid, Pagination, Row, Col, Button, Tooltip } from 'antd';
+import { Card, Typography, Alert, Input, Select, Skeleton, message, Pagination, Row, Col, Button, Tooltip } from 'antd';
 import { ShoppingCartOutlined, ReloadOutlined } from '@ant-design/icons';
 import { debounce } from 'lodash';
-import { FixedSizeGrid } from 'react-window';
+import { VariableSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import type { AppDispatch, RootState } from '../store/store';
 import { fetchProducts, setSearchTerm, setSortOption, setCurrentPage, setPageSize } from '../store/productsSlice';
@@ -14,13 +14,11 @@ const { Meta } = Card;
 const { Title, Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
-const { useBreakpoint } = Grid;
 
 const ProductList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { items, status, error, searchTerm, sortOption, currentPage, pageSize } = useSelector((state: RootState) => state.products);
-  const screens = useBreakpoint();
-  const gridRef = useRef<FixedSizeGrid>(null);
+  const listRef = useRef<VariableSizeList>(null);
 
   // Local state for immediate UI update
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
@@ -46,8 +44,8 @@ const ProductList: React.FC = () => {
 
   // Scroll to top when page changes
   useEffect(() => {
-    if (gridRef.current) {
-      gridRef.current.scrollTo({ scrollTop: 0 });
+    if (listRef.current) {
+      listRef.current.scrollTo(0);
     }
   }, [currentPage]);
 
@@ -129,21 +127,6 @@ const ProductList: React.FC = () => {
     setRecTrigger(prev => prev + 1);
   };
 
-  // Determine column count based on breakpoint (similar to Ant Design responsive grid)
-  const getColumnCount = () => {
-    if (screens.xxl) return 6;
-    if (screens.xl) return 4; // 6 cols was a bit tight for XL, let's try 4
-    if (screens.lg) return 3;
-    if (screens.md) return 2;
-    if (screens.sm) return 2;
-    return 1;
-  };
-  
-  const columnCount = getColumnCount();
-  
-  // Calculate row count
-  const rowCount = Math.ceil(paginatedProducts.length / columnCount);
-
   // Random Recommendations (Simulate AI)
   const randomRecommendations = useMemo(() => {
     if (items.length === 0) return [];
@@ -151,58 +134,6 @@ const ProductList: React.FC = () => {
     const shuffled = [...items].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 4);
   }, [items, recTrigger]);
-
-  // Render cell for react-window
-  const Cell = ({ columnIndex, rowIndex, style }: any) => {
-    const index = rowIndex * columnCount + columnIndex;
-    const product = paginatedProducts[index];
-
-    if (!product) {
-      return <div style={style} />;
-    }
-
-    // Add padding to simulate gap
-    const gutter = 24;
-    const left = parseFloat(style.left || 0);
-    const top = parseFloat(style.top || 0);
-    const width = parseFloat(style.width || 0);
-    const height = parseFloat(style.height || 0);
-
-    const itemStyle = {
-      ...style,
-      left: left + gutter / 2,
-      top: top + gutter / 2,
-      width: width - gutter,
-      height: height - gutter,
-    };
-
-    return (
-      <div style={itemStyle}>
-         <Card
-            hoverable
-            style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-            cover={<img alt={product.name} src={product.image} style={{ height: 200, objectFit: 'cover' }} />}
-            actions={[
-              <ShoppingCartOutlined key="cart" style={{ fontSize: '20px' }} onClick={() => handleAddToCart(product)} />,
-            ]}
-          >
-            <Meta
-              title={product.name}
-              description={
-                <>
-                  <Text type="secondary" style={{ display: 'block', height: '44px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {product.description}
-                  </Text>
-                  <Text strong style={{ fontSize: '18px', color: '#1890ff', marginTop: '10px', display: 'block' }}>
-                    ${product.price.toFixed(2)}
-                  </Text>
-                </>
-              }
-            />
-          </Card>
-      </div>
-    );
-  };
 
   if (status === 'failed') {
     return (
@@ -213,105 +144,178 @@ const ProductList: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Title level={2} style={{ textAlign: 'center', marginBottom: '32px' }}>
-        Featured Products
-      </Title>
-
-      {/* Recommendations Section */}
-      {randomRecommendations.length > 0 && (
-        <div style={{ marginBottom: '40px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', gap: '8px' }}>
-             <Title level={4} style={{ margin: 0 }}>You May Also Like</Title>
-             <Tooltip title="Refresh Recommendations">
-                <Button type="text" icon={<ReloadOutlined />} onClick={handleRefreshRecs} />
-             </Tooltip>
-          </div>
-          <Row gutter={[16, 16]} justify="center">
-            {randomRecommendations.map(product => (
-              <Col key={`rec-${product.id}`} xs={24} sm={12} md={6} lg={6} xl={6}>
-                <Card
-                  hoverable
-                  style={{ width: '100%', display: 'flex', flexDirection: 'column' }}
-                  cover={<img alt={product.name} src={product.image} style={{ height: 160, objectFit: 'cover' }} />}
-                  bodyStyle={{ padding: '12px', flex: 1 }}
-                  actions={[
-                    <ShoppingCartOutlined key="cart" onClick={() => handleAddToCart(product)} />,
-                  ]}
-                >
-                  <Meta
-                    title={<Text strong style={{ fontSize: '14px' }} ellipsis>{product.name}</Text>}
-                    description={
-                      <Text strong style={{ fontSize: '14px', color: '#1890ff' }}>
-                         ${product.price.toFixed(2)}
-                      </Text>
-                    }
-                  />
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </div>
-      )}
-
-      {/* Controls: Search and Sort */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px', flexShrink: 0 }}>
-        <Search
-          placeholder="Search products..."
-          allowClear
-          value={localSearchTerm}
-          onSearch={handleManualSearch}
-          onChange={handleSearchChange}
-          style={{ width: 300 }}
-          disabled={status === 'loading'}
-        />
-        <Select
-          defaultValue={null}
-          style={{ width: 200 }}
-          onChange={handleSortChange}
-          placeholder="Sort by"
-          allowClear
-          disabled={status === 'loading'}
-        >
-          <Option value="price_asc">Price: Low to High</Option>
-          <Option value="price_desc">Price: High to Low</Option>
-          <Option value="name_asc">Name: A to Z</Option>
-          <Option value="name_desc">Name: Z to A</Option>
-        </Select>
-      </div>
-
-      {/* Virtualized Grid */}
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, minHeight: 0 }}>
         {status === 'loading' ? (
            <div style={{ textAlign: 'center', marginTop: '50px' }}>
              <Skeleton active paragraph={{ rows: 10 }} />
            </div>
-        ) : processedProducts.length > 0 ? (
-          <AutoSizer>
-            {({ height, width }) => (
-              <FixedSizeGrid
-                ref={gridRef}
-                columnCount={columnCount}
-                columnWidth={(width - 20) / columnCount} // Subtract 20px for scrollbar
-                height={height}
-                rowCount={rowCount}
-                rowHeight={420} // Approximate height of the Card
-                width={width}
-                style={{ overflowX: 'hidden' }}
-              >
-                {Cell}
-              </FixedSizeGrid>
-            )}
-          </AutoSizer>
         ) : (
-          <div style={{ textAlign: 'center', marginTop: '50px' }}>
-            <Text type="secondary">No products found.</Text>
-          </div>
+          <AutoSizer>
+            {({ height, width }) => {
+              // Calculate columns based on width
+              let columnCount = 1;
+              if (width >= 1600) columnCount = 6;
+              else if (width >= 1200) columnCount = 4;
+              else if (width >= 992) columnCount = 3;
+              else if (width >= 768) columnCount = 2;
+              else if (width >= 576) columnCount = 2;
+              
+              const productRowCount = Math.ceil(paginatedProducts.length / columnCount);
+              const totalListCount = 1 + productRowCount; // 1 for Header
+              
+              // Estimate header height
+              const headerHeight = randomRecommendations.length > 0 ? 550 : 150;
+
+              const getItemSize = (index: number) => {
+                if (index === 0) return headerHeight;
+                return 450; // Product Row Height + Gap
+              };
+
+              return (
+                <VariableSizeList
+                  ref={listRef}
+                  height={height}
+                  width={width}
+                  itemCount={totalListCount}
+                  itemSize={getItemSize}
+                  style={{ overflowX: 'hidden' }}
+                >
+                  {({ index, style }) => {
+                    // Adjust style to account for scrollbar width
+                    const rowStyle = {
+                      ...style,
+                      width: typeof style.width === 'number' ? style.width - 20 : 'calc(100% - 20px)',
+                    };
+
+                    // Header Row
+                    if (index === 0) {
+                      return (
+                        <div style={rowStyle}>
+                          <div style={{ paddingBottom: 24 }}>
+                            <Title level={2} style={{ textAlign: 'center', marginBottom: '32px' }}>
+                              Featured Products
+                            </Title>
+
+                            {/* Recommendations Section */}
+                            {randomRecommendations.length > 0 && (
+                              <div style={{ marginBottom: '40px' }}>
+                                <Row gutter={[24, 24]} style={{ margin: 0 }}>
+                                  <Col span={24}>
+                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '8px' }}>
+                                      <Title level={4} style={{ margin: 0 }}>You May Also Like</Title>
+                                      <Tooltip title="Refresh Recommendations">
+                                          <Button type="text" icon={<ReloadOutlined />} onClick={handleRefreshRecs} />
+                                      </Tooltip>
+                                    </div>
+                                  </Col>
+                                </Row>
+                                <Row gutter={[24, 24]} style={{ margin: 0 }}>
+                                  {randomRecommendations.map(product => (
+                                    <Col key={`rec-${product.id}`} xs={24} sm={12} md={6} lg={6} xl={6}>
+                                      <Card
+                                        hoverable
+                                        style={{ width: '100%', display: 'flex', flexDirection: 'column' }}
+                                        cover={<img alt={product.name} src={product.image} style={{ height: 160, objectFit: 'cover' }} />}
+                                        bodyStyle={{ padding: '12px', flex: 1 }}
+                                        actions={[
+                                          <ShoppingCartOutlined key="cart" onClick={() => handleAddToCart(product)} />,
+                                        ]}
+                                      >
+                                        <Meta
+                                          title={<Text strong style={{ fontSize: '14px' }} ellipsis>{product.name}</Text>}
+                                          description={
+                                            <Text strong style={{ fontSize: '14px', color: '#1890ff' }}>
+                                              ${product.price.toFixed(2)}
+                                            </Text>
+                                          }
+                                        />
+                                      </Card>
+                                    </Col>
+                                  ))}
+                                </Row>
+                              </div>
+                            )}
+
+                            {/* Controls: Search and Sort */}
+                            <Row gutter={[24, 24]} style={{ margin: '0 0 24px 0' }}>
+                              <Col span={24}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                                  <Search
+                                    placeholder="Search products..."
+                                    allowClear
+                                    value={localSearchTerm}
+                                    onSearch={handleManualSearch}
+                                    onChange={handleSearchChange}
+                                    style={{ width: 300 }}
+                                  />
+                                  <Select
+                                    defaultValue={null}
+                                    style={{ width: 200 }}
+                                    onChange={handleSortChange}
+                                    placeholder="Sort by"
+                                    allowClear
+                                  >
+                                    <Option value="price_asc">Price: Low to High</Option>
+                                    <Option value="price_desc">Price: High to Low</Option>
+                                    <Option value="name_asc">Name: A to Z</Option>
+                                    <Option value="name_desc">Name: Z to A</Option>
+                                  </Select>
+                                </div>
+                              </Col>
+                            </Row>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Product Grid Row
+                    const rowIndex = index - 1;
+                    const startIndex = rowIndex * columnCount;
+                    const rowItems = paginatedProducts.slice(startIndex, startIndex + columnCount);
+                    
+                    return (
+                      <div style={rowStyle}>
+                        <Row gutter={[24, 24]} style={{ margin: 0, height: 'calc(100% - 30px)' }}>
+                          {rowItems.map(product => (
+                            <Col key={product.id} span={24 / columnCount} style={{ height: '100%' }}>
+                              <Card
+                                hoverable
+                                style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+                                cover={<img alt={product.name} src={product.image} style={{ height: 200, objectFit: 'cover' }} />}
+                                actions={[
+                                  <ShoppingCartOutlined key="cart" style={{ fontSize: '20px' }} onClick={() => handleAddToCart(product)} />,
+                                ]}
+                              >
+                                <Meta
+                                  title={product.name}
+                                  description={
+                                    <>
+                                      <Text type="secondary" style={{ display: 'block', height: '44px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {product.description}
+                                      </Text>
+                                      <Text strong style={{ fontSize: '18px', color: '#1890ff', marginTop: '10px', display: 'block' }}>
+                                        ${product.price.toFixed(2)}
+                                      </Text>
+                                    </>
+                                  }
+                                />
+                              </Card>
+                            </Col>
+                          ))}
+                        </Row>
+                      </div>
+                    );
+                  }}
+                </VariableSizeList>
+              );
+            }}
+          </AutoSizer>
         )}
       </div>
 
-      {/* Pagination */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px', flexShrink: 0 }}>
+      {/* Pagination - Fixed at bottom */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px', paddingBottom: '16px', flexShrink: 0 }}>
         <Pagination
           current={currentPage}
           total={totalItems}
