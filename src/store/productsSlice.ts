@@ -28,7 +28,7 @@ const initialState: ProductsState = {
   searchTerm: '',
   sortOption: null,
   currentPage: 1,
-  pageSize: 6, // Show 6 items per page initially
+  pageSize: 50, // Show 50 items per page initially
 };
 
 export const fetchProducts = createAsyncThunk('products/fetchProducts', async () => {

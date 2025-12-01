@@ -218,7 +218,7 @@ const ProductList: React.FC = () => {
           pageSize={pageSize}
           onChange={handlePageChange}
           showSizeChanger
-          pageSizeOptions={['6', '12', '24']}
+          pageSizeOptions={['50', '100', '200']}
           disabled={status === 'loading'}
         />
       </div>
