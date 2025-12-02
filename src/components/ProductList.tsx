@@ -102,6 +102,34 @@ const RowRenderer: React.FC<RowRendererProps> = ({ index, style, data }) => {
   );
 };
 
+// A simple pseudo-random number generator (PRNG) for deterministic shuffling
+const mulberry32 = (seed: number) => {
+  let a = seed;
+  return () => {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+};
+
+const seededShuffle = (array: Product[], seed: number): Product[] => {
+  if (array.length === 0) return [];
+  const getRnd = mulberry32(seed);
+  
+  // Create an array of objects with original item and a random sort key
+  const tempArr = array.map(item => ({
+    item,
+    sortKey: getRnd()
+  }));
+
+  // Sort based on the generated sort key
+  tempArr.sort((a, b) => a.sortKey - b.sortKey);
+
+  // Return the shuffled items
+  return tempArr.map(entry => entry.item);
+};
+
 const ProductList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { items, status, error, searchTerm, sortOption, currentPage, pageSize } = useSelector((state: RootState) => state.products);
@@ -218,7 +246,7 @@ const ProductList: React.FC = () => {
   const randomRecommendations = useMemo(() => {
     if (items.length === 0) return [];
     // Shuffle array and pick first 4. Depend on recTrigger to refresh.
-    const shuffled = [...items].sort(() => 0.5 - Math.random());
+    const shuffled = seededShuffle(items, recTrigger);
     return shuffled.slice(0, 4);
   }, [items, recTrigger]);
 
